@@ -37,3 +37,6 @@ using 6ND.
 | FP8 (E4M3)  | 4            | 3              | small   | ~1                   |
 | FP8 (E5M2)  | 5            | 2              | medium  | <1                   |
 
+
+FP32 has the best Precision but expensive at computition, BF-16 has the same Exponent bits (range) <br>
+$which \ made \ it \ really \ good \ at \ training \ but \ low \ cost.$
