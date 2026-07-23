@@ -4,6 +4,7 @@
 $`where \ all \ codes \ here \ are \ written \ by \ me`$ @Meshojs 
 
 # Lecture 1 : Tokenization | $`using \ Byte \ Pair \ Encoding`$
+	Algorithm : https://en.wikipedia.org/wiki/Byte-pair_encoding
 	sentence = "Hello world" 
  1. **tokenizer 1** =  3 bytes `["Hello", " ", "world"]` 
  2. **tokenizer 2** = 2 bytes `["Hello", " world"]`
