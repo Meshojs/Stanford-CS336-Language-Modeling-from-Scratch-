@@ -1,33 +1,44 @@
 # Stanford-CS336-LM
-<b>Implementing things i learn from these lectures to level up AI skills.</b> 
+
+<b>Implementing things i learn from these lectures to level up AI skills.</b>
 <br/>
-$`where \ all \ codes \ here \ are \ written \ by \ me`$ @Meshojs 
 
-# Lecture 1 : Tokenization | $`using \ Byte \ Pair \ Encoding`$
-	Algorithm : https://en.wikipedia.org/wiki/Byte-pair_encoding
-	sentence = "Hello world" 
- 1. **tokenizer 1** =  3 bytes `["Hello", " ", "world"]` 
- 2. **tokenizer 2** = 2 bytes `["Hello", " world"]`
+$`where \ all \ codes \ here \ are \ written \ by \ me`$ @Meshojs
 
-* $r1 = \frac{11}{3}$
-* $r2 = \frac{11}{2}$
-* $where \ rule = \frac{number \ of \ bytes}{number \ of \ tokens}$
+---
+
+## Lecture 1 : Tokenization | $`using \ Byte \ Pair \ Encoding`$
+
+**Algorithm:** https://en.wikipedia.org/wiki/Byte-pair_encoding
+
+sentence = "Hello world"
+
+1. **tokenizer 1** = 3 bytes `["Hello", " ", "world"]`
+2. **tokenizer 2** = 2 bytes `["Hello", " world"]`
+
+- $r1 = \frac{11}{3}$
+- $r2 = \frac{11}{2}$
+- $where \ rule = \frac{number \ of \ bytes}{number \ of \ tokens}$
 
 > ***r2 wins*** , r2 has bigger $compression \ ratio$ , `which means lower tokens ,  {efficient}`
-#
 
-# Lecture 2 : Resource Accounting - Precisions <br>
-1 - let's say we have a 350M Parameter Model. Lad1-350M for example `(gonna share it soon)`, and i want to Train it on $`H-100 \ .10B\ Tokens`$. <br>
-$`where \ MFU \ of \ H-100 \  is \  approx. \ 60e^{12}`$ <br> 
+---
+
+## Lecture 2 : Resource Accounting - Precisions
+
+### 1. FLOPs & Throughput
+
+let's say we have a 350M Parameter Model. Lad1-350M for example `(gonna share it soon)`, and i want to Train it on $`H-100 \ .10B\ Tokens`$.
+
+$`where \ MFU \ of \ H-100 \  is \  approx. \ 60e^{12}`$
+
 using 6ND.
 
-* $total \ flops \ = \ 6 *\ 350^{10^{6}}$ <br>
-* $cluster \ through \ put = Num \ of \ gpus \ * \ MFU \ * \ (gpu \ flops \ of \ fp32 \ for \ example )$ <br>
-* $time = \frac{total}{cluster}$
+- $total \ flops \ = \ 6 *\ 350^{10^{6}}$
+- $Throughput \ = \ Ngpus \ × \ perGPUFLOPs \ × \ MFU$
+- $time = \frac{total}{cluster}$
 
-<br>
-
-2 - Precisions 
+### 2. Precisions
 
 | Format      | Exponent bits | Mantissa bits | Range   | Precision (~digits) |
 |-------------|--------------|----------------|---------|----------------------|
@@ -38,6 +49,31 @@ using 6ND.
 | FP8 (E4M3)  | 4            | 3              | small   | ~1                   |
 | FP8 (E5M2)  | 5            | 2              | medium  | <1                   |
 
+FP32 has the best Precision but expensive at computition, BF-16 has the same Exponent bits (range)
 
-FP32 has the best Precision but expensive at computition, BF-16 has the same Exponent bits (range) <br>
 $which \ made \ it \ really \ good \ at \ training \ but \ low \ cost.$
+
+### 3. Compute bound $`Or`$ Memory bound
+
+performance characteristics where they help u find bottlenick in memory or compute
+
+> *Example : so now i am training a model LETS say it is Lad1-350M haha again,*
+>
+> *so when i trained Lad i discoverd that the model - is slow in training or inference i went to the gpu profile and i found that gpu is idle waiting for data to get inside*
+>
+> *"gpue - cores" to compute*
+>
+> *THIS is a Memory bound, Low bandwidth speed.*
+
+### 4. Memory
+
+when training a Deeplearning model, ofc u need memory to load and save the Parameters , gradient (backprop), optimizer, Activation
+
+so the Rules:
+
+> - $`Parameters \ = 2 * (D * D * L)`$
+> - $`Activations \ = 2 * (B * D * L)`$
+> - $`gradients = \ 2 * Parameters`$
+> - $`optimizer_state \ = \ 4 * Parameters`$
+ 
+- Yes, gradients and optimizers are killers
