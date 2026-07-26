@@ -1,97 +1,109 @@
 # Stanford-CS336-LM
 
-<b>Implementing things i learn from these lectures to level up AI skills.</b>
-<br/>
+Implementing concepts from the Stanford CS336 (Language Modeling from Scratch) lectures to build hands-on AI/ML engineering skills.
 
-$`where \ all \ codes \ here \ are \ written \ by \ me`$ @Meshojs
-
----
-
-## Lecture 1 : Tokenization | $`using \ Byte \ Pair \ Encoding`$
-
-**Algorithm:** https://en.wikipedia.org/wiki/Byte-pair_encoding
-
-sentence = "Hello world"
-
-1. **tokenizer 1** = 3 bytes `["Hello", " ", "world"]`
-2. **tokenizer 2** = 2 bytes `["Hello", " world"]`
-
-- $r1 = \frac{11}{3}$
-- $r2 = \frac{11}{2}$
-- $where \ rule = \frac{number \ of \ bytes}{number \ of \ tokens}$
-
-> ***r2 wins*** , r2 has bigger $compression \ ratio$ , `which means lower tokens ,  {efficient}`
+All code in this repository is written by me — [@Meshojs](https://github.com/Meshojs)
 
 ---
 
-## Lecture 2 : Resource Accounting - Precisions
+## Lecture 1: Tokenization — Byte Pair Encoding
 
-### 1. FLOPs & Throughput
+**Reference:** [Byte-pair encoding (Wikipedia)](https://en.wikipedia.org/wiki/Byte-pair_encoding)
 
-let's say we have a 350M Parameter Model. Lad1-350M for example `(gonna share it soon)`, and i want to Train it on $`H-100 \ .10B\ Tokens`$.
+Consider the sentence: `"Hello world"`
 
-$`where \ MFU \ of \ H-100 \  is \  approx. \ 60e^{12}`$
+| Tokenizer | Tokens | Count |
+|---|---|---|
+| Tokenizer 1 | `["Hello", " ", "world"]` | 3 |
+| Tokenizer 2 | `["Hello", " world"]` | 2 |
 
-using 6ND.
+Compression ratio is defined as:
 
-- $total \ flops \ = \ 6 *\ 350^{10^{6}}$
-- $Throughput \ = \ Ngpus \ × \ perGPUFLOPs \ × \ MFU$
-- $time = \frac{total}{cluster}$
+$$r = \frac{\text{number of bytes}}{\text{number of tokens}}$$
 
-### 2. Precisions
+$$r_1 = \frac{11}{3}, \qquad r_2 = \frac{11}{2}$$
 
-| Format      | Exponent bits | Mantissa bits | Range   | Precision (~digits) |
-|-------------|--------------|----------------|---------|----------------------|
-| FP32        | 8            | 23             | huge    | ~7                   |
-| TF32        | 8            | 10             | huge    | ~3                   |
-| FP16        | 5            | 10             | small   | ~3                   |
-| BF16        | 8            | 7              | huge    | ~2                   |
-| FP8 (E4M3)  | 4            | 3              | small   | ~1                   |
-| FP8 (E5M2)  | 5            | 2              | medium  | <1                   |
+**Result:** Tokenizer 2 wins — a higher compression ratio means fewer tokens, which is more efficient.
 
-FP32 has the best Precision but expensive at computition, BF-16 has the same Exponent bits (range)
+---
 
-$which \ made \ it \ really \ good \ at \ training \ and \ low \ cost.$
+## Lecture 2: Resource Accounting & Precision
 
-### 3. Compute bound $`Or`$ Memory bound
+### 2.1 FLOPs & Throughput
 
-performance characteristics where they help u find bottlenick in memory or compute
+Suppose we train a 350M-parameter model (**Lad1-350M**, to be released soon) on 10B tokens using an H100 GPU.
 
-> *Example : so now i am training a model LETS say it is Lad1-350M haha again,*
+$$\text{MFU}_{\text{H100}} \approx 60 \times 10^{12} \text{ FLOPs/s}$$
+
+Using the $6ND$ approximation:
+
+$$\text{Total FLOPs} = 6 \times 350 \times 10^{6} \times N_{\text{tokens}}$$
+
+$$\text{Throughput} = N_{\text{GPUs}} \times \text{FLOPs}_{\text{GPU}} \times \text{MFU}$$
+
+$$\text{Training Time} = \frac{\text{Total FLOPs}}{\text{Throughput}}$$
+
+### 2.2 Numerical Precision Formats
+
+| Format | Exponent bits | Mantissa bits | Range | Precision (~digits) |
+|---|---|---|---|---|
+| FP32 | 8 | 23 | huge | ~7 |
+| TF32 | 8 | 10 | huge | ~3 |
+| FP16 | 5 | 10 | small | ~3 |
+| BF16 | 8 | 7 | huge | ~2 |
+| FP8 (E4M3) | 4 | 3 | small | ~1 |
+| FP8 (E5M2) | 5 | 2 | medium | <1 |
+
+FP32 offers the best precision but is computationally expensive. BF16 shares FP32's exponent range (dynamic range) while being far cheaper to compute — making it a strong default for training.
+
+### 2.3 Compute-Bound vs. Memory-Bound
+
+Performance profiling helps identify whether a bottleneck is in compute or memory bandwidth.
+
+> **Example:** While training Lad1-350M, I noticed slow throughput during training/inference. GPU profiling showed the compute cores idle, waiting on data delivery.
 >
-> *so when i trained Lad i discoverd that the model - is slow in training or inference i went to the gpu profile and i found that gpu is idle waiting for data to get inside*
->
-> *"gpue - cores" to compute*
->
-> *THIS is a Memory bound, Low bandwidth speed.*
+> **Diagnosis:** This is a **memory-bound** regime — bottlenecked by bandwidth, not compute.
 
-### 4. Memory
+### 2.4 Memory Accounting
 
-when training a Deeplearning model, ofc u need memory to load and save the Parameters , gradient (backprop), optimizer, Activation
+Training a deep learning model requires memory for parameters, gradients, optimizer state, and activations:
 
-so the Rules:
+$$\text{Parameters} = 2 \cdot (D \cdot D \cdot L)$$
 
-> - $`Parameters \ = 2 * (D * D * L)`$
-> - $`Activations \ = 2 * (B * D * L)`$
-> - $`gradients = \ 2 * Parameters`$
-> - $`optimizer_state \ = \ 4 * Parameters`$
- 
-- Yes, gradients and optimizers are killers
+$$\text{Activations} = 2 \cdot (B \cdot D \cdot L)$$
 
+$$\text{Gradients} = 2 \cdot \text{Parameters}$$
 
-## Lecture 3 : Architecture 
+$$\text{Optimizer State} = 4 \cdot \text{Parameters}$$
 
-1 - Post Norm vs Pre Norm
-   > who tf use PostNorm in 2026 haha, anyways PreNorm is actually better, (stable)
+**Takeaway:** gradients and optimizer state dominate memory usage.
 
-   $`PreNorm\ = \ x \ + \ MHA(LN(x))`$ <br>
-   $`postNorm\ = \ LN(x \ + \ MHA(x))`$ <br>
- ### why tho ?
-    let me tell u why. when using the preNorm, backprop goes through x (main stream)
-    but PostNorm has to backprop through LN then x (main stream) which make it unstable
- 
-  
-2 - LayerNorm vs RMS Norm
-   > RMSNorm wins in computition cost , low , fast , <b>Because</b> LayerNorm has to measure Mean,variance and it has Bias and learnable gain  <br>
-   > RMSNORM doesn't need all of that
+---
 
+## Lecture 3: Architecture
+
+### 3.1 Pre-Norm vs. Post-Norm
+
+Pre-Norm is the modern standard — nobody uses Post-Norm in 2026. It's simply more stable.
+
+$$\text{Pre-Norm}: \quad x + \text{MHA}(\text{LN}(x))$$
+
+$$\text{Post-Norm}: \quad \text{LN}(x + \text{MHA}(x))$$
+
+**Why Pre-Norm wins:** with Pre-Norm, gradients backpropagate directly through the residual stream $x$. With Post-Norm, gradients must pass through LN before reaching the residual stream, which destabilizes training.
+
+### 3.2 LayerNorm vs. RMSNorm
+
+RMSNorm is cheaper and faster to compute. LayerNorm requires computing both mean and variance, plus a learnable bias and gain. RMSNorm drops all of that — normalizing only by root-mean-square.
+
+### 3.3 Gated Activations
+
+Rather than a plain activation function, gated activations introduce a learnable projection $V$ that lets the model decide which tokens to keep or suppress.
+
+**Example:** `"The cat sat on the mat"` → The **(kill)**, cat **(keep)**, sat **(keep)**, on **(kill)**, the **(kill)**, mat **(keep)**
+
+$$\text{Swish}(z) = z \cdot \sigma(z)$$
+
+$$\text{SwiGLU}(x) = \text{Swish}(xW_1) \cdot (xV)$$
+
+$$\text{GLU}(x) = \sigma(xW_1) \cdot (xV)$$
