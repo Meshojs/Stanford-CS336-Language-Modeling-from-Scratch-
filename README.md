@@ -51,7 +51,7 @@ using 6ND.
 
 FP32 has the best Precision but expensive at computition, BF-16 has the same Exponent bits (range)
 
-$which \ made \ it \ really \ good \ at \ training \ but \ low \ cost.$
+$which \ made \ it \ really \ good \ at \ training \ and \ low \ cost.$
 
 ### 3. Compute bound $`Or`$ Memory bound
 
@@ -77,3 +77,21 @@ so the Rules:
 > - $`optimizer_state \ = \ 4 * Parameters`$
  
 - Yes, gradients and optimizers are killers
+
+
+## Lecture 3 : Architecture 
+
+1 - Post Norm vs Pre Norm
+   > who tf use PostNorm in 2026 haha, anyways PreNorm is actually better, (stable)
+
+   $`PreNorm\ = \ x \ + \ MHA(LN(x))`$ <br>
+   $`postNorm\ = \ LN(x \ + \ MHA(x))`$ <br>
+ ### why tho ?
+    let me tell u why. when using the preNorm, backprop goes through x (main stream)
+    but PostNorm has to backprop through LN then x (main stream) which make it unstable
+ 
+  
+2 - LayerNorm vs RMS Norm
+   > RMSNorm wins in computition cost , low , fast , <b>Because</b> LayerNorm has to measure Mean,variance and it has Bias and learnable gain  <br>
+   > RMSNORM doesn't need all of that
+
