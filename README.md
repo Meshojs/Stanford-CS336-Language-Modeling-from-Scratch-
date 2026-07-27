@@ -2,7 +2,7 @@
 
 Implementing concepts from the Stanford CS336 (Language Modeling from Scratch) lectures to build hands-on AI/ML engineering skills.
 
-All code in this repository is written by me — [@Meshojs](https://github.com/Meshojs)
+All code in this repository is written by me — [@Meshojs](https://github.com/Meshojs) 
 
 ---
 
@@ -90,7 +90,7 @@ $$\text{Pre-Norm}: \quad x + \text{MHA}(\text{LN}(x))$$
 
 $$\text{Post-Norm}: \quad \text{LN}(x + \text{MHA}(x))$$
 
-**Why Pre-Norm wins:** with Pre-Norm, gradients backpropagate directly through the residual stream $x$. With Post-Norm, gradients must pass through LN before reaching the residual stream, which destabilizes training.
+**Why Pre-Norm wins:** whot tf use POSTNORM ?? . with Pre-Norm, gradients backpropagate directly through the residual stream $x$. With Post-Norm, gradients must pass through LN before reaching the residual stream, which destabilizes training.
 
 ### 3.2 LayerNorm vs. RMSNorm
 
